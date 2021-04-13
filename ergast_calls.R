@@ -42,17 +42,113 @@ reqTeamId <- function(team){
 pointsMaximum <- function(year){
   return(40)
 }
+reqDrivers <- function(season,team){
+  if(missing(team)){
+    url <- paste("http://ergast.com/api/f1/",season,"/driversStandings.json", sep="")
+    req <-GET(url)
+    data <- content(req)
+  }
+  else{
+    constructor <- reqTeamId(team)$ids
+    url <- paste('https://ergast.com/api/f1/',season,'/1/constructors/',constructor,'/drivers.json', sep="")
+    req <-GET(url)
+    print(url)
+    data <- content(req)
+  }
+  driverInfo <- data$MRData$DriverTable$Drivers
+  driverIds <- c()
+  driverNames <- c()
+  driverNumbers <- c()
+  for(driver in driverInfo){
+    driverIds <-c(driverIds,driver$driverId)
+    driverNames <- c(driverNames, paste(driver$givenName, driver$familyName))
+    if(season>2013){
+      driverNumbers <- c(driverNumbers,driver$permanentNumber)
+    }
+  }
+  drivers <<- data.frame(driverIds = driverIds,
+                  driverNames = driverNames,
+                  driverNumbers = driverNumbers)
+  return(drivers)
+}
 
+reqSeasonResult <- function(season,driver){
+  print(paste("request results of the driver", driver))
+  driver <- tolower(driver)
+  if(driver==""){
+    return(NULL)
+  }
+  name <- unlist(strsplit(driver,"\\s"))
+  url <- paste("http://ergast.com/api/f1/",season,"/drivers/",name[2],"/results.json", sep="")
+  print(url)
+  req <-GET(url)
+  data <- content(req)
+  results <- data$MRData$RaceTable$Races
+  if(length(results)==0){
+    url <- paste("http://ergast.com/api/f1/",season,"/drivers/",name[1],"_",name[2],"/results.json", sep="")
+    print(url)
+    req <-GET(url)
+    data <- content(req)
+    results <- data$MRData$RaceTable$Races
+  }
+  races <- reqRaceRounds(season)
+  points <- c()
+  qualified <- c()
+  finished <- c()
+  poles <- 0
+  podiums <- 0
+  fastestLaps <- 0
+  tPoints <- 0
+  retirements <- 0
+  for(race in results){
+    tPoints <- tPoints + as.integer(race$Results[[1]]$points)
+    points <- c(points,tPoints)
+    if(!is.na(as.integer(race$Results[[1]]$positionText))){
+      finished <- c(finished,as.integer(race$Results[[1]]$position))
+      if(race$Results[[1]]$FastestLap$rank == 1)
+        fastestLaps <- fastestLaps+1
+    }
+    else{
+      retirements <- retirements+1
+      finished <- c(finished,as.integer(race$Results[[1]]$position))
+    }
+    qualified <- append(qualified, as.integer(race$Results[[1]]$grid))
+  }
+ 
+  poles <- sum(qualified == 1, na.rm = TRUE)
+  wins <- sum(finished == 1, na.rm = TRUE)
+  podiums <- sum(finished < 4, na.rm = TRUE)
+  print("before check")
+  print(points)
+  while(length(points)<races){
+      points <- append(points, points[length(points)])
+      finished <- append(finished,NA)
+      qualified <- append(qualified,NA)
+      print("race added")
+  }
+  print("creo collection")
+  seasonDriver <- list(
+    races = races,
+    wins = wins,
+    podiums = podiums,
+    retirements = retirements,
+    points = points,
+    poles = poles,
+    finished = finished,
+    qualified = qualified,
+    fastestLaps = fastestLaps
+  )
+  return(seasonDriver)
+}
 
 reqTeamPoints = function(season, team, races){
-  print(nzchar(team))
   if(!nzchar(team))
     return("")
   print(paste("Request points of", team, season, sep =" "))
-  constructor <- reqTeamId(team)
+  constructor <- reqTeamId(team)$ids
   api_head <- 'https://ergast.com/api/f1/'
   file_results <- '/constructorStandings.json'
-  url <- paste(api_head,season,'/',races,'/constructors/',constructor,file_results, sep="",collapse=NULL)
+  url <- paste(api_head,season,'/',races[2],'/constructors/',constructor,file_results, sep="",collapse=NULL)
   req <-GET(url)
   print(url)
   data <- content(req)
@@ -72,8 +168,8 @@ reqTeamPoints = function(season, team, races){
   racePoints <- 0
   totalPoints <- 0
   pointsProgress <- c()
-  print(c(1:races))
-  for(race in seq(from =1, to = races, by = 1)){
+  for(race in seq(from=races[1], to=races[2], by=1)){
+    print(race)
     url <- paste(api_head,season,'/',race,'/constructors/',constructor,file_results, sep="",collapse=NULL)
     req <- GET(url)
     print(url)
@@ -85,7 +181,7 @@ reqTeamPoints = function(season, team, races){
     }
     positions <- c(as.integer(raceInfo$Results[[1]]$position), as.integer(raceInfo$Results[[2]]$position))
     podiums <- podiums + sum(positions<4)
-    if(!raceInfo$Results[[1]]$positionText == "R" && !raceInfo$Results[[1]]$positionText == "D"  && !raceInfo$Results[[1]]$positionText == "W" ){
+    if(!raceInfo$Results[[1]]$positionText == "R" && !raceInfo$Results[[1]]$positionText == "D"  && !raceInfo$Results[[1]]$positionText == "W" && !raceInfo$Results[[1]]$positionText == "F" ){
       if(season>2003){
         if (raceInfo$Results[[1]]$FastestLap$rank =="1"){
           fastestLaps<- fastestLaps+1
@@ -96,7 +192,7 @@ reqTeamPoints = function(season, team, races){
     }
     else
       retirements <- retirements+1
-    if(!raceInfo$Results[[2]]$positionText == "R" && !raceInfo$Results[[2]]$positionText == "D"  && !raceInfo$Results[[2]]$positionText == "W"){
+    if(!raceInfo$Results[[2]]$positionText == "R" && !raceInfo$Results[[2]]$positionText == "D"  && !raceInfo$Results[[2]]$positionText == "W" && !raceInfo$Results[[1]]$positionText == "F"){
       if(season>2003){
        if(raceInfo$Results[[2]]$FastestLap$rank == "1"){
         fastestLaps<- fastestLaps+1
@@ -108,14 +204,26 @@ reqTeamPoints = function(season, team, races){
         retirements <- retirements+1
     racePoints <- as.integer(raceInfo$Results[[1]]$points) + as.integer(raceInfo$Results[[2]]$points )
     totalPoints <- totalPoints+racePoints
-    pointsProgress[race] <- totalPoints
+    pointsProgress <- append(pointsProgress, totalPoints)
     if(racePoints >= maximumPoints){
       maximumPoints <- racePoints
       raceBestResult <- raceInfo$raceName
       positionsBest <- paste(positions[1],"°", " and ", positions[2],"°" ," position",sep="")
       }
   }
-  summarySeason <- data.frame(position, podiums, pointsGained, wins, retirements, polePositions, fastestLaps, raceBestResult,positionsBest, maximumPoints, pointsProgress)
+  summarySeason <- list(position = position,
+                        podiums = podiums,
+                        pointsGained = pointsGained,
+                        wins = wins,
+                        retirements = retirements,
+                        polePositions = polePositions,
+                        fastestLaps = fastestLaps,
+                        raceBestResult = raceBestResult,
+                        positionsBest = positionsBest,
+                        maximumPoints = maximumPoints,
+                        pointsProgress = pointsProgress,
+                        teamId = constructor,
+                        drivers = reqDrivers(season, team))
   return(summarySeason)
 }
 
