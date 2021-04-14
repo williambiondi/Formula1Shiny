@@ -8,7 +8,7 @@ All the data is retrieved through the API of Ergast (http://ergast.com/mrd/) whi
 Formula One, also called F1 in short, is an international auto racing sport. F1 is the highest level of single-seat, open-wheel and open-cockpit professional motor racing contest.
 
 ### Objectives
-A Formula One season is composed by a given number of races called Grand Prix conducted over a period of time (usually every year from march to october), they're located all around the world
+A Formula One season is composed by a number of races called Grand Prix conducted over a period of time (usually every year from march to october), they're located all around the world
 The results of all the Grand Prix races in a season are taken together to determine two annual Championship awards. They are:
 
 - Drivers' Championship Award (for the driver who scored most points)
