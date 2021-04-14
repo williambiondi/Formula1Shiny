@@ -23,7 +23,7 @@ A Grand Prix is a weekend composed by sessions of free practice on friday, quali
 Free practice is used by drivers to test and setup the car
 Qualifying session builds up the starting grid rewarding with the first position (Pole position) the driver who has the fastest lap and so on with ascending order.
 And finally the race, where the driver who crosses the finish line first after completing a pre-determined number of laps is declared the winner and score the maximum points. 
-Other positions, usually top 10 or top 8 are rewarded by points based on the system which changed over the years.
+Other positions, usually top 10 or top 8 are rewarded by points based on the point system that changed over the years.
 Recently the driver who performed the fastest lap during the race is rewarded by an extra point.
 
 
