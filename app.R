@@ -15,6 +15,7 @@ source('ergast_calls.R')
                              c(2000:2021),
                              selected = 2020,
                              ),
+                 tableOutput("pointsSystemTeam"),
                  selectizeInput("teamName", choices = c(), label = "Select team"),
                  sliderInput(inputId = "races",
                              label="Number of races ",
@@ -54,6 +55,7 @@ source('ergast_calls.R')
                              "Select season",
                              c(2000:2021),
                              selected = 2020),
+                 tableOutput("pointsSystemDriver"),
                  tags$h3("Driver 1"),
                  selectizeInput("teamName1", choices = c(), label = "Select team"),
                  selectizeInput("driverName1", choices = c(), label = "Select driver"),
@@ -66,6 +68,9 @@ source('ergast_calls.R')
                  h4("In this section is possible to select a Formula One driver from a given team in a given season and compare the results over time during the season"),
                  plotOutput("driverPointsChart"),
                  fluidRow(column(6,h3(textOutput("D1"))),column(6,align="right",h3(textOutput("D2")))),
+                 fluidRow(column(6,h4(textOutput("teamD1"))),column(6,align="right",h4(textOutput("teamD2")))),
+                 fluidRow(column(12,align="center",h3("Standings"))),
+                 fluidRow(column(6,h3(textOutput("standingsD1"))),column(6,align="right",h3(textOutput("standingsD2")))),
                  fluidRow(column(12,align="center",h3("Wins"))),
                  fluidRow(column(6,h3(textOutput("winsD1"))),column(6,align="right",h3(textOutput("winsD2")))),
                  fluidRow(column(12,align="center",h3("Podiums"))),
@@ -91,12 +96,12 @@ source('ergast_calls.R')
   # Define server function  
   server <- function(input, output){
     observeEvent(input$seasonTabTeams, {
+        output$pointsSystemTeam <- renderTable(reqPointsSystem(input$seasonTabTeams))
         updateSelectInput(session=getDefaultReactiveDomain(),"teamName", choices = reqTeams(input$seasonTabTeams)$names, selected = "" )
         updateSliderInput(session=getDefaultReactiveDomain(),"races", min = 1, max = reqRaceRounds(input$seasonTabTeams), value = 5)
       })
     observeEvent(input$teamName,{
       summarySeason <<- reqTeamPoints(input$seasonTabTeams, input$teamName, input$races)
-      print(summarySeason)
       if(!nzchar(summarySeason)){
         output$title <- renderText({"No team selected"})
       }
@@ -145,7 +150,6 @@ source('ergast_calls.R')
         }
         else{
           df <- data.frame(races = seq(from=input$races[1], to=input$races[2]), points = summarySeason$pointsProgress)
-          print(df$points)
           output$teamPointsChart <- renderPlot({
             ggplot(df, aes(races, points)) +
             geom_line() + 
@@ -183,6 +187,7 @@ source('ergast_calls.R')
       updateSelectInput(session=getDefaultReactiveDomain(),"teamName2", choices = reqTeams(input$seasonTabDrivers)$names, selected = "" )
       driversTeam1 <- reqDrivers(input$seasonTabDrivers, input$teamName1)
       driversTeam2 <- reqDrivers(input$seasonTabDrivers, input$teamName2)
+      output$pointsSystemDriver<- renderTable(reqPointsSystem(input$seasonTabDrivers))
       updateSelectInput(session=getDefaultReactiveDomain(),"driverName1", choices = driversTeam1$driverNames, selected = "" )
       updateSelectInput(session=getDefaultReactiveDomain(),"driverName2", choices = driversTeam2$driverNames, selected = "" )
     })
@@ -240,6 +245,8 @@ source('ergast_calls.R')
       output$polesD1 <- renderText({seasonDriver1$poles})
       output$fastestLapsD1 <- renderText({seasonDriver1$fastestLaps})
       output$dnfD1 <- renderText({seasonDriver1$retirements})
+      output$standingsD1 <- renderText({paste(seasonDriver1$standings,"°", sep="")})
+      output$teamD1 <- renderText({seasonDriver1$team})  
       output$avgQualiD1 <- renderText({
         round(mean(seasonDriver1$qualified,na.rm=TRUE), digits = 1)
       })
@@ -294,6 +301,9 @@ source('ergast_calls.R')
       output$polesD2 <- renderText({seasonDriver2$poles})
       output$fastestLapsD2 <- renderText({seasonDriver2$fastestLaps})
       output$dnfD2 <- renderText({seasonDriver2$retirements})
+      output$standingsD2 <- renderText({paste(seasonDriver2$standings,"°", sep="")})
+      output$teamD2 <- renderText({seasonDriver2$team})  
+      
       output$avgQualiD2 <- renderText({
         round(mean(seasonDriver2$qualified,na.rm=TRUE), digits = 1)
       })
