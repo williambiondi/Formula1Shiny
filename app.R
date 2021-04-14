@@ -69,7 +69,7 @@ source('ergast_calls.R')
                  plotOutput("driverPointsChart"),
                  fluidRow(column(6,h3(textOutput("D1"))),column(6,align="right",h3(textOutput("D2")))),
                  fluidRow(column(6,h4(textOutput("teamD1"))),column(6,align="right",h4(textOutput("teamD2")))),
-                 fluidRow(column(12,align="center",h3("Standings"))),
+                 fluidRow(column(12,align="center",h3("Driver standings"))),
                  fluidRow(column(6,h3(textOutput("standingsD1"))),column(6,align="right",h3(textOutput("standingsD2")))),
                  fluidRow(column(12,align="center",h3("Wins"))),
                  fluidRow(column(6,h3(textOutput("winsD1"))),column(6,align="right",h3(textOutput("winsD2")))),
