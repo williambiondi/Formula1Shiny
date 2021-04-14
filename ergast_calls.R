@@ -64,11 +64,18 @@ pointsMaximum <- function(year){
 }
 reqDrivers <- function(season,team){
   print("request drivers")
+  driverIds <- c()
+  driverNames <- c()
   if(missing(team) || !nzchar(team)){
-    url <- paste("http://ergast.com/api/f1/",season,"/driversStandings.json", sep="")
+    url <- paste("http://ergast.com/api/f1/",season,"/driverStandings.json", sep="")
     print(url)
     req <-GET(url)
     data <- content(req)
+    driverInfo <- data$MRData$StandingsTable$StandingsLists[[1]]$DriverStandings
+    for(driver in driverInfo){
+      driverIds <-c(driverIds,driver$Driver$driverId)
+      driverNames <- c(driverNames, paste(driver$Driver$givenName, driver$Driver$familyName))
+    }
   }
   else{
     constructor <- reqTeamId(team)$ids
@@ -76,16 +83,14 @@ reqDrivers <- function(season,team){
     req <-GET(url)
     print(url)
     data <- content(req)
+    driverInfo <- data$MRData$DriverTable$Drivers
+    for(driver in driverInfo){
+      driverIds <-c(driverIds,driver$driverId)
+      driverNames <- c(driverNames, paste(driver$givenName, driver$familyName))
+    }
   }
-  driverInfo <- data$MRData$DriverTable$Drivers
-  driverIds <- c()
-  driverNames <- c()
-  driverNumbers <- c()
-  for(driver in driverInfo){
-    driverIds <-c(driverIds,driver$driverId)
-    driverNames <- c(driverNames, paste(driver$givenName, driver$familyName))
-  }
-  drivers <- data.frame(driverIds = driverIds,
+  
+  drivers <- list(driverIds = driverIds,
                   driverNames = driverNames)
   return(drivers)
 }
