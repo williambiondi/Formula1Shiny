@@ -11,8 +11,8 @@ Formula One, also called F1 in short, is an international auto racing sport. F1 
 A Formula One season is composed by a number of races called Grand Prix conducted over a period of time (usually every year from march to october), they're located all around the world
 The results of all the Grand Prix races in a season are taken together to determine two annual Championship awards. They are:
 
-- Drivers' Championship Award (for the driver who scored most points)
-- Constructors' Championship Award (for the team who scored most points)
+- Drivers Championship Award (for the driver who scored most points)
+- Constructors Championship Award (for the team who scored most points)
 
 ### Teams
 A team is usually a firm which joins the championship hiring two drivers, engineers, managers, mechanics and so on to build and manage the two cars allowed to race. A team is rewarded by the total points scored by the two drivers (example: if the two Ferrari drivers scored points, the team Ferrari gained the sum of the points scored for the constructor championship)
